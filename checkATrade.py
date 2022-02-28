@@ -15,15 +15,13 @@ def db_load(response):
         sql_master = f'''INSERT INTO public.run(run_time,records) values ('{dt}' , {rec_nbr})'''
         cursor.execute(sql_master)
         conn.commit()
-
         for i in response.json()['results']:
             species = json.dumps(i['species'])
             vehicles = json.dumps(i['vehicles'])
             starships = json.dumps(i['starships'])
             for j in i['films']:
                 film_respone = requests.get(j)
-
-                sql_statement = f'''INSERT INTO public.swapi(
+                sql_statement = f'''INSERT INTO public.records(
 	name, height, mass, hair_color, skin_color, eye_color, birth_year, gender, homeworld, films, species, vehicles, starships, created, edited, url)
 	VALUES ('{i['name']}', {i['height']}, {i['mass']}, '{i['hair_color']}', '{i['skin_color']}', '{i['eye_color']}',
             '{i['birth_year']}', '{i['gender']}', '{i['homeworld']}', '{film_respone.json()['title']}', '{species}', 
@@ -40,7 +38,7 @@ def aggr_sql():
     try:
         conn = psycopg2.connect(database="postgres", user='postgres', password='Saibabadaddy@7$', host='127.0.0.1', port= '5432')
         cursor = conn.cursor()
-        cursor.execute('''with a as (select (regexp_matches(birth_year, '[0-9]+\.?[0-9]*'))[1]::numeric as birth, films,name, birth_year from public.swapi),
+        cursor.execute('''with a as (select (regexp_matches(birth_year, '[0-9]+\.?[0-9]*'))[1]::numeric as birth, films,name, birth_year from public.records),
 b as (select min(birth) as birth, films from a
 group by films)
 select a.name, b.films, a.birth_year from a,b
@@ -67,4 +65,3 @@ def main(url):
 if __name__ == '__main__':
     url = 'https://swapi.dev/api/people'
     main(url)
-
